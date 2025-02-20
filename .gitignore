@@ -1,0 +1,9 @@
+/node_modules
+package-lock.json
+bin/ragemp-server.exe
+bin/BugTrap-x64.dll
+bin/bin/loader.mjs
+bin/bin/enc.dat
+bin/bin/bt.dat
+/.idea
+bin/ragemp-pkg.cjs

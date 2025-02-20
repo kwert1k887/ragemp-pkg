@@ -1,0 +1,36 @@
+{
+  "name": "ragemp-pkg",
+  "version": "0.0.1",
+  "description": "Install RAGE:MP Binaries Quickly",
+  "keywords": [
+    "ragemp",
+    "cli",
+    "tool",
+    "RAGE:MP"
+  ],
+  "bin": {
+    "ragemp-pkg": "bin/ragemp-pkg.cjs"
+  },
+  "homepage": "https://github.com/kwert1k887/ragemp-pkg#readme",
+  "bugs": {
+    "url": "https://github.com/kwert1k887/ragemp-pkg/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kwert1k887/ragemp-pkg.git"
+  },
+  "license": "ISC",
+  "author": "kwert8887",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "node esbuild.config.js"
+  },
+  "dependencies": {
+    "@types/node": "^22.13.4",
+    "axios": "^1.7.9",
+    "chalk": "^5.4.1",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.3"
+  }
+}

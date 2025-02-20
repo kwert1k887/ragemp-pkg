@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ESNext", // Генерирует код с использованием последней версии JavaScript (ESNext).
+    "module": "ESNext", // Использует ES-модули для импорта/экспорта.
+    "moduleResolution": "Node", // Разрешает модули как в Node.js (ищет index.ts, index.js и package.json).
+    "strict": true, // Включает строгий режим TypeScript.
+    "esModuleInterop": true, // Позволяет импортировать CommonJS-модули с `import` (нужно для совместимости).
+    "forceConsistentCasingInFileNames": true, // Запрещает ошибки из-за регистра в названиях файлов.
+    "skipLibCheck": true // Пропускает проверку типов внутри node_modules.
+  },
+  "include": ["src"] // Компилирует только файлы внутри папки `src/`.
+}
