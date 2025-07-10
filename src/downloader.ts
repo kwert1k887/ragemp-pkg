@@ -1,89 +1,113 @@
 import axios from 'axios';
-import * as path from 'path';
-import chalk from 'chalk';
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
+import * as path from 'path';
 import * as os from 'os';
 import crypto from 'crypto';
 
 import { config } from './config';
+import { logger } from './logger';
 
-export default new class Downloader {
-    private baseUrl: string = config.baseUrl;
-    private files: string[] = config.files;
-    private system: string = config.system;
-    private branch: string = config.branch;
+export class Downloader {
+    private readonly baseUrl = config.baseUrl;
+    private readonly files = config.files;
+    private readonly system = config.system;
+    private readonly branch = config.branch;
 
+    /**
+     * Вычисляет SHA-256 хеш файла по пути
+     */
     private async getFileHash(filePath: string): Promise<string> {
         return new Promise((resolve, reject) => {
             const hash = crypto.createHash('sha256');
             const stream = fs.createReadStream(filePath);
-            stream.on('data', chunk => hash.update(chunk));
-            stream.on('end', () => resolve(hash.digest('hex')));
-            stream.on('error', reject);
+
+            stream.on('data', (chunk) => hash.update(chunk));
+            stream.once('end', () => resolve(hash.digest('hex')));
+            stream.once('error', reject);
         });
     }
 
+    /**
+     * Скачивает файл по URL в указанный путь с проверкой хеша для избежания перезаписи неизмененного файла
+     */
     private async downloadFile(url: URL, outputPath: string): Promise<void> {
-        const dir = path.dirname(outputPath);
-        await fsp.mkdir(dir, { recursive: true });
+        await fsp.mkdir(path.dirname(outputPath), { recursive: true });
 
-        const exists = fs.existsSync(outputPath);
-        const tmpFile = path.join(os.tmpdir(), `ragemp-pkg-${path.basename(outputPath)}-${Date.now()}`);
+        const tempFile = path.join(
+            os.tmpdir(),
+            `ragemp-pkg-${path.basename(outputPath)}-${Date.now()}`
+        );
 
         try {
-            const response = await axios.get(url.toString(), { responseType: 'stream', proxy: false });
-
-            if (response.status !== 200) {
-                throw new Error(`Не удалось скачать ${url}: ${response.status}`);
-            }
-
-            const tmpStream = fs.createWriteStream(tmpFile);
-            response.data.pipe(tmpStream);
-
-            await new Promise<void>((resolve, reject) => {
-                tmpStream.on('finish', () => resolve());
-                tmpStream.on('error', reject);
+            const response = await axios.get(url.toString(), {
+                responseType: 'stream',
+                proxy: false,
             });
 
-            if (exists) {
+            if (response.status !== 200) {
+                throw new Error(`Failed to download ${url} (status: ${response.status})`);
+            }
+
+            const writeStream = fs.createWriteStream(tempFile);
+            response.data.pipe(writeStream);
+
+            await new Promise<void>((resolve, reject) => {
+                writeStream.once('finish', resolve);
+                writeStream.once('error', reject);
+            });
+
+            if (fs.existsSync(outputPath)) {
                 const [oldHash, newHash] = await Promise.all([
                     this.getFileHash(outputPath),
-                    this.getFileHash(tmpFile),
+                    this.getFileHash(tempFile),
                 ]);
 
                 if (oldHash === newHash) {
-                    console.log(chalk.gray(`Пропущено (без изменений): ${path.basename(outputPath)}`));
-                    await fsp.unlink(tmpFile);
+                    logger.debug(`Файл не изменился, пропускаем: ${path.basename(outputPath)}`);
+                    await fsp.unlink(tempFile);
                     return;
                 }
             }
 
-            await fsp.copyFile(tmpFile, outputPath);
-            await fsp.unlink(tmpFile);
-            console.log(chalk.whiteBright(`Скачано:`), chalk.yellowBright(path.basename(outputPath)));
-        } catch (err) {
-            await fsp.unlink(tmpFile).catch(() => {});
-            throw err;
+            try {
+                await fsp.rename(tempFile, outputPath);
+            } catch (err) {
+                if ((err as NodeJS.ErrnoException).code === 'EXDEV') {
+                    await fsp.copyFile(tempFile, outputPath);
+                    await fsp.unlink(tempFile);
+                } else {
+                    throw err;
+                }
+            }
+
+            logger.downloaded(path.basename(outputPath));
+        } catch (error) {
+            await fsp.unlink(tempFile).catch(() => {});
+            throw error;
         }
     }
 
+    /**
+     * Основной метод — скачивает все файлы из конфигурации
+     */
     public async downloadAll(): Promise<void> {
-        console.log(chalk.greenBright('||===== ragemp-pkg =====||'));
-        console.log(chalk.whiteBright(`Система: `), chalk.yellowBright(this.system));
-        console.log(chalk.whiteBright(`Ветка: `), chalk.yellowBright(this.branch));
-        console.log(chalk.greenBright('||===== Загрузка =====||'));
+        logger.header('||===== ragemp-pkg =====||');
+        logger.system(this.system);
+        logger.branch(this.branch);
+        logger.section('||====== Загрузка ======||');
 
         for (const file of this.files) {
             const fileUrl = new URL(file, this.baseUrl);
-            const outputPath = path.join(process.cwd(), file);
+            const outputPath = path.resolve(process.cwd(), file);
+
             try {
                 await this.downloadFile(fileUrl, outputPath);
             } catch (err) {
-                console.error(chalk.red(`Ошибка при скачивании ${file}:`), err);
+                logger.error(`Ошибка при скачивании ${file}: ${err instanceof Error ? err.message : err}`);
             }
         }
 
-        console.log(chalk.greenBright('||===== Завершено =====||'));
+        logger.section('||====== Завершено ======||');
     }
 }
