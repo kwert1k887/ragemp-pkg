@@ -1,15 +1,7 @@
-```markdown
 # ragemp-pkg
-
-![image](https://github.com/user-attachments/assets/7f8a77e6-04ed-430e-a025-8716ed418ce6)
-
 Быстрая и удобная загрузка серверных бинарников для RAGE:MP серверов.
 
-## 📦 Установка
-
-bash
-npm install --save-dev ragemp-pkg
-```
+![image](https://github.com/user-attachments/assets/7f8a77e6-04ed-430e-a025-8716ed418ce6)
 
 ## 🚀 Использование
 
