@@ -14,6 +14,7 @@ const formatWithBox = (label: string, msg: string): string => {
 export const logger: Record<string, LogFn> = {
     header: (msg) => console.log(chalk.greenBright.bold(msg)),
     system: (msg) => console.log(formatWithBox('Система:', msg)),
+    unzip: (msg) => console.log(chalk.yellowBright(msg)),
     branch: (msg) => console.log(formatWithBox('Ветка:', msg)),
     section: (msg) => console.log(chalk.greenBright.bold(msg)),
     downloaded: (msg) => console.log(chalk.white('Скачано:'), chalk.yellowBright(msg)),
