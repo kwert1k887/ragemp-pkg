@@ -7,7 +7,7 @@
 
 ## 📦 Установка
 
-```bash
+bash
 npm install --save-dev ragemp-pkg
 ```
 
@@ -21,7 +21,6 @@ npm install --save-dev ragemp-pkg
 | `npx ragemp-pkg windows` | Скачать Windows файлы |
 | `npx ragemp-pkg linux` | Скачать Linux файлы |
 | `npx ragemp-pkg select` | Выбрать ОС интерактивно |
-| `ragemp-pkg release` | Скачать последние релизные бинарники |
 
 ### Примеры использования
 
