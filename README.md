@@ -41,4 +41,5 @@ npm install --save-dev ragemp-pkg
 ```bash
 npx ragemp-pkg release
 ```
-Готово! Бинарные файлы сервера RAGE:MP будут загружены в вашу проектную директорию.
+
+--- 
